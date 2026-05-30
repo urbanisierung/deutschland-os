@@ -29,6 +29,9 @@ deutschland-os/
 The core logic lives in `@deutschland-os/shared` and is framework-agnostic; the
 web app and the Claude skill are thin consumers.
 
+See [`doc/scraping.md`](doc/scraping.md) for how listing scraping works and how
+to deploy it.
+
 ## Prerequisites
 
 - Node.js ≥ 22

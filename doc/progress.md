@@ -1,5 +1,14 @@
 # Progress
 
+## 2026-05-30 — Scraping documentation
+
+- Added `doc/scraping.md` documenting how the listing scraper works (fetch →
+  Cheerio parse → JSON-LD-first extraction with Open Graph/meta fallback →
+  German number normalization → Zod validation), its limitations, and how to
+  deploy it via the web app (standalone Node server, Docker, env vars) or the
+  Claude skill CLI.
+- Linked the new doc from `README.md`.
+
 ## 2026-05-30 — Real estate use case (initial implementation)
 
 Bootstrapped the monorepo and implemented the first use case end to end.
