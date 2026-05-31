@@ -1,5 +1,30 @@
 # Progress
 
+## 2026-05-30 — Scraper reliability & anti-blocking
+
+Added a resilient, pluggable HTTP layer so listings can be fetched reliably and
+the scraper avoids being blocked.
+
+- New `packages/shared/src/fetcher.ts`:
+  - `createResilientFetcher` — rotating realistic browser headers/User-Agents,
+    per-request timeout (`AbortSignal`), and retries with jittered exponential
+    backoff that honors `Retry-After`. All nondeterminism (sleep, jitter, clock,
+    UA order) is injectable for deterministic tests.
+  - `createGateway` / `createFetcherFromEnv` — route requests through a proxy or
+    managed scraping API (residential IPs, JS rendering, CAPTCHA) via a
+    `{url}`/`{key}` template; configured by `SCRAPER_*` env vars with no code
+    change. This is the lever for getting past DataDome-class protection.
+  - `withCache` — TTL cache of successful responses for availability + lower
+    request volume.
+- `scrapeListing` now defaults to the env-configured resilient fetcher; the
+  injectable `fetchImpl` is retained for tests.
+- Added `fetcher.test.ts` (header/UA rotation, retry/backoff, Retry-After,
+  gateway templating, cache hit/expiry, env wiring) — 36 shared tests pass.
+- Honest scope note: true "never blocked" against DataDome requires the gateway
+  (proxies/managed API); documented in `doc/scraping.md`.
+- Documented config + recommended setups in `doc/scraping.md` and
+  `apps/web/.env.example`.
+
 ## 2026-05-30 — Scraping documentation
 
 - Added `doc/scraping.md` documenting how the listing scraper works (fetch →

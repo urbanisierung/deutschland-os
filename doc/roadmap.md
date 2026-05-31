@@ -10,6 +10,8 @@
 - [x] Web app (Astro + Preact + Zustand) with `/api/generate`
 - [x] Claude skill wrapping the core
 - [x] Unit tests for core logic
+- [x] Resilient fetch layer (rotating headers/UA, timeout, retries + backoff,
+      caching) with a pluggable proxy / scraping-API gateway for anti-blocking
 
 ### Next
 - [ ] Portal-specific scrapers (ImmoScout24, Immowelt, Kleinanzeigen) with

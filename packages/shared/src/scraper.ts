@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { createFetcherFromEnv, type FetchLike } from "./fetcher.js";
 import { type Listing, ListingSchema } from "./types.js";
 
 /**
@@ -119,16 +120,19 @@ export function parseListingHtml(html: string, url: string | null = null): Listi
   return ListingSchema.parse(merged);
 }
 
-export type FetchLike = (
-  url: string,
-) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
+/** Lazily created so environment configuration is read at call time, not import time. */
+let defaultFetcher: FetchLike | undefined;
 
 /**
- * Fetches a listing URL and parses it into a {@link Listing}. The fetch
- * implementation is injectable for testing; defaults to the global `fetch`.
+ * Fetches a listing URL and parses it into a {@link Listing}. When no fetcher is
+ * supplied it uses the resilient, anti-blocking fetcher configured from the
+ * environment (see {@link createFetcherFromEnv}); pass `fetchImpl` to inject a
+ * stub in tests.
  */
-export async function scrapeListing(url: string, fetchImpl: FetchLike = fetch): Promise<Listing> {
-  const response = await fetchImpl(url);
+export async function scrapeListing(url: string, fetchImpl?: FetchLike): Promise<Listing> {
+  if (!fetchImpl && !defaultFetcher) defaultFetcher = createFetcherFromEnv();
+  const doFetch = fetchImpl ?? (defaultFetcher as FetchLike);
+  const response = await doFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch listing (${response.status}): ${url}`);
   }

@@ -1,4 +1,16 @@
 export {
+  type CacheOptions,
+  createFetcherFromEnv,
+  createGateway,
+  createResilientFetcher,
+  type FetchLike,
+  type Gateway,
+  type HttpResponse,
+  parseRetryAfter,
+  type ResilientFetcherOptions,
+  withCache,
+} from "./fetcher.js";
+export {
   type ApplicationModel,
   buildHumanPrompt,
   createOpenAIApplicationModel,
@@ -13,12 +25,7 @@ export {
   type ListingSource,
   ListingSourceSchema,
 } from "./request.js";
-export {
-  type FetchLike,
-  parseGermanNumber,
-  parseListingHtml,
-  scrapeListing,
-} from "./scraper.js";
+export { parseGermanNumber, parseListingHtml, scrapeListing } from "./scraper.js";
 export {
   type ApplicationResponse,
   ApplicationResponseSchema,
