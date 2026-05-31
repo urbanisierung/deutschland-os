@@ -1,0 +1,26 @@
+{
+  "name": "@deutschland-os/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/node": "10.1.2",
+    "@astrojs/preact": "5.1.4",
+    "@deutschland-os/shared": "*",
+    "astro": "6.4.2",
+    "preact": "10.29.2",
+    "zustand": "5.0.14"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.5",
+    "typescript": "5.9.3",
+    "vitest": "4.1.7"
+  }
+}
