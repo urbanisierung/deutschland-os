@@ -1,5 +1,16 @@
 # Progress
 
+## 2026-06-22 — Local Service Finder proposal
+
+- Added `docs/features/02_LOCAL_SERVICE_FINDER.md`: a proposal for the second use
+  case — matching a concrete job (e.g. Wärmepumpe install) to the right local
+  company. Covers why Gemini + Google Maps falls short, the moat (German
+  registries: Energieeffizienz-Experten-Liste, Handwerksrolle, Innung,
+  manufacturer Fachpartner lists), how it reuses the existing fetcher/scraper/
+  generator stack, a `ServiceRequest`/`ProviderMatch` schema sketch, the data
+  sourcing & legal stance (clean vs. grey-area sources; §87b UrhG, GDPR, §7 UWG),
+  an MVP slice, and phased action items. No code changes yet — proposal only.
+
 ## 2026-05-30 — Scraper reliability & anti-blocking
 
 Added a resilient, pluggable HTTP layer so listings can be fetched reliably and
