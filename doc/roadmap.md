@@ -30,11 +30,14 @@ Match a concrete job (e.g. Wärmepumpe install) to the right local company.
 See [`docs/features/02_LOCAL_SERVICE_FINDER.md`](../docs/features/02_LOCAL_SERVICE_FINDER.md)
 for the full proposal.
 
-### Phase 0 — Decisions (blocking, before code)
-- [ ] Confirm data-source policy: official-only vs. include grey-area
-      directories as a fallback
-- [ ] Decide whether v1 sends the Anfragen or only generates them
-- [ ] Confirm initial trade + region scope (recommend Wärmepumpe + one PLZ area)
+### Phase 0 — Decisions (resolved 2026-06-23)
+- [x] Data-source policy: **official-only for v1** (Google Places API + official
+      registries). Grey-area directories and lead marketplaces out of scope.
+- [x] Outbound: **generate only for v1** — produce a ready-to-send Anfrage; the
+      user sends it. No automated outbound (avoids §7 UWG risk). Auto-send stays
+      Phase 4.
+- [x] Scope: **Wärmepumpe, one metro region** (Berlin or Munich; pick the region
+      you can ground-truth yourself).
 
 ### Phase 1 — Schema & core
 - [ ] Add `ServiceRequest` / `ProviderMatch` Zod schemas to `packages/shared`

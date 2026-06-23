@@ -1,5 +1,16 @@
 # Progress
 
+## 2026-06-23 — Local Service Finder: Phase 0 decisions resolved
+
+- Recorded the three blocking Phase 0 decisions in `doc/roadmap.md` and
+  `docs/features/02_LOCAL_SERVICE_FINDER.md`:
+  - Data-source policy: **official-only for v1** (Places API + official
+    registries); grey-area directories and lead marketplaces out of scope.
+  - Outbound: **generate only for v1** (user sends the Anfrage); auto-send stays
+    Phase 4 to avoid §7 UWG risk.
+  - Scope: **Wärmepumpe, one metro region** (Berlin or Munich).
+- Unblocks Phase 1 (schemas + `generateServiceRequest()`).
+
 ## 2026-06-22 — Local Service Finder proposal
 
 - Added `docs/features/02_LOCAL_SERVICE_FINDER.md`: a proposal for the second use

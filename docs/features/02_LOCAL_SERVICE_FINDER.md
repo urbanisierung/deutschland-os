@@ -143,12 +143,22 @@ new infrastructure.
 
 ## Action items
 
-### Phase 0 — Decisions (blocking, before code)
+### Phase 0 — Decisions (resolved 2026-06-23)
 
-- [ ] Confirm **data-source policy**: official-only vs. include grey-area
-      directories as a fallback.
-- [ ] Decide whether v1 **sends** the Anfragen or only **generates** them.
-- [ ] Confirm initial **trade + region** scope (recommend Wärmepumpe + one PLZ area).
+- [x] **Data-source policy: official-only for v1.** Google Places API (clean base
+      layer) + official registries only. Grey-area Branchenbücher and lead
+      marketplaces are out of scope — the moat (funding eligibility +
+      certifications) lives entirely in the clean sources, so the legal risk of
+      scraping directories buys only marginal name coverage. Reversible: a safer
+      "follow the link to the business's own site" fallback can be added later.
+- [x] **Outbound: generate only for v1.** Produce a ready-to-send Anfrage; the
+      user sends it. No automated outbound — keeps §7 UWG risk off the product,
+      and the core value (matching + a polished job-specific Anfrage) is already
+      delivered. Auto-send + response tracking stays Phase 4.
+- [x] **Scope: Wärmepumpe, one metro region** (recommend Berlin or Munich — pick
+      the region you can ground-truth yourself). Wärmepumpe maximizes the moat
+      (most funding-coupled trade), and one trade keeps the trade-specific
+      schema/scoring honest before generalizing to PV/Sanitär.
 
 ### Phase 1 — Schema & core
 
