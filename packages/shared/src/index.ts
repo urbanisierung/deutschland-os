@@ -27,6 +27,27 @@ export {
 } from "./request.js";
 export { parseGermanNumber, parseListingHtml, scrapeListing } from "./scraper.js";
 export {
+  type ProviderCertification,
+  ProviderCertificationSchema,
+  type ProviderInquiry,
+  ProviderInquirySchema,
+  type ProviderMatch,
+  ProviderMatchSchema,
+  type ServiceRequest,
+  ServiceRequestSchema,
+  type ServiceTrade,
+  ServiceTradeSchema,
+} from "./service.js";
+export {
+  buildServiceHumanPrompt,
+  createOpenAIServiceModel,
+  generateServiceRequest,
+  type OpenAIServiceModelConfig,
+  SERVICE_SYSTEM_PROMPT,
+  type ServiceGenerationInput,
+  type ServiceModel,
+} from "./service-generator.js";
+export {
   type ApplicationResponse,
   ApplicationResponseSchema,
   type Listing,

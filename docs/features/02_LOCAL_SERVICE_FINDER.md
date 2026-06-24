@@ -82,6 +82,7 @@ type ServiceRequest = {
   funding: { wantsKfW: boolean };
 };
 
+// Factual candidate, assembled by the data layer (Places API + registry enrichment)
 type ProviderMatch = {
   name: string;
   location: { lat: number; lng: number };
@@ -93,10 +94,24 @@ type ProviderMatch = {
     | "vaillant-fachpartner"
   )[];
   fundingEligible: boolean; // ← the signal Maps lacks
+};
+
+// LLM output, mirroring ApplicationResponse (facts in, judgment + message out)
+type ProviderInquiry = {
+  subjectLine: string;
+  inquiryMessage: string; // the ready-to-send Anfrage (formal "Sie")
   matchScore: number; // 0–100, like confidenceScore
   caveats: string[]; // "not on EE-Experten list → KfW at risk"
+  shouldContact: boolean; // like shouldApply
 };
 ```
+
+> **Phase 1 note:** implemented in `packages/shared/src/service.ts` +
+> `service-generator.ts`. The judgment fields (`matchScore`, `caveats`) live on
+> the LLM output `ProviderInquiry`, not on the factual `ProviderMatch` candidate —
+> keeping the data layer (facts) and the generator (judgment) cleanly separated,
+> exactly as `Listing` → `ApplicationResponse`. `generateServiceRequest()` takes a
+> `ServiceRequest` + a `ProviderMatch` and returns a validated `ProviderInquiry`.
 
 ## Data sourcing & legal stance
 

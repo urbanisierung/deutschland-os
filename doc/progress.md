@@ -1,5 +1,28 @@
 # Progress
 
+## 2026-06-24 — Local Service Finder: Phase 1 (schema & core)
+
+Implemented the second use case's core in `@deutschland-os/shared`, mirroring the
+real-estate `types.ts` / `generator.ts` split. No platform consumers yet.
+
+- `service.ts` — Zod schemas + inferred types:
+  - `ServiceRequest` (the job: trade, German PLZ, building, funding intent, notes),
+    `ProviderMatch` (factual candidate: name, geo, distance, certifications,
+    `fundingEligible`), and `ProviderInquiry` (LLM output: subject, Anfrage,
+    `matchScore`, `caveats`, `shouldContact`). Judgment fields live on the output,
+    not the candidate — same facts-in/judgment-out shape as `ApplicationResponse`.
+- `service-generator.ts` — `generateServiceRequest()` with an injectable
+  `ServiceModel`; `createOpenAIServiceModel()` wires LangChain + `gpt-4o-mini`
+  native structured output. Prompt built directly (no template interpolation) so
+  scraped provider text can't break it. The system prompt enforces formal "Sie",
+  asks for an Angebot, and ties `shouldContact = false` to missing KfW eligibility.
+- `service-generator.test.ts` — prompt rendering + input/output validation (8
+  tests). Full shared suite: 62/62 pass.
+- Exported all new symbols from `index.ts`.
+- Verification: `biome check .` clean, `turbo typecheck test` 6/6 pass.
+- Marked Phase 1 done in `doc/roadmap.md`; aligned the schema sketch in
+  `docs/features/02_LOCAL_SERVICE_FINDER.md` with the implemented split.
+
 ## 2026-06-23 — Local Service Finder: Phase 0 decisions resolved
 
 - Recorded the three blocking Phase 0 decisions in `doc/roadmap.md` and

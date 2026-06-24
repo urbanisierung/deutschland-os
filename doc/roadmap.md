@@ -40,9 +40,10 @@ for the full proposal.
       you can ground-truth yourself).
 
 ### Phase 1 — Schema & core
-- [ ] Add `ServiceRequest` / `ProviderMatch` Zod schemas to `packages/shared`
-- [ ] Add a `generateServiceRequest()` generator (mirror `generateApplication()`)
-      with an injectable model and unit tests
+- [x] Add `ServiceRequest` / `ProviderMatch` Zod schemas to `packages/shared`
+      (`service.ts`; result type `ProviderInquiry`)
+- [x] Add a `generateServiceRequest()` generator (mirror `generateApplication()`)
+      with an injectable model and unit tests (`service-generator.ts`)
 
 ### Phase 2 — Data layer
 - [ ] Google Places API client for "who exists + where" (env-configured key)
