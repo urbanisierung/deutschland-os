@@ -1,5 +1,20 @@
 # Roadmap
 
+## E-invoicing use case (planned)
+
+Chosen as use case #2. Rationale and scope boundaries in
+[`doc/eu-compliance-radar.md`](eu-compliance-radar.md). Build the documents
+(generate / validate / parse), not the Peppol network.
+
+- [ ] EN 16931 invoice model (Zod) in `packages/shared/src/einvoice/`
+- [ ] CII serializer → XRechnung XML, validated against the KoSIT validator in CI
+- [ ] Incoming parser (XRechnung → normalized invoice) — covers the 2025
+      "must receive" obligation
+- [ ] ZUGFeRD hybrid PDF (embed CII in PDF/A-3 via pdf-lib)
+- [ ] Web view (`/invoice`): form → download XRechnung/ZUGFeRD; drop-and-validate
+- [ ] Claude `einvoice` skill (build / validate / parse)
+- [ ] Optional LLM edges: extract invoice from scanned PDF; explain an invoice
+
 ## Real estate use case
 
 ### Done
