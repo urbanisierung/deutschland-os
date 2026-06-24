@@ -1,5 +1,18 @@
 # Progress
 
+## 2026-06-24 — EU compliance radar & e-invoicing decision
+
+- Added `doc/eu-compliance-radar.md`: a scan of the 2025–2030 EU
+  regulatory-digitalization mandates (e-invoicing, NIS2, DORA, AI Act, CSRD,
+  CBAM, EUDR, Digital Product Passport, Data Act, eIDAS 2, EAA) and the decision
+  to build **e-invoicing** (EN 16931 / XRechnung / ZUGFeRD) as use case #2 while
+  documenting — not building — the rest.
+- Rationale: e-invoicing fits the existing architecture (schema in `shared` +
+  thin web/skill consumers), has a deterministic core, serves freelancers/SMBs,
+  and is solo-sized when scoped to the documents (generate/validate/parse) rather
+  than the Peppol network.
+- Added the e-invoicing track to `doc/roadmap.md`. No code yet.
+
 ## 2026-05-30 — Scraper reliability & anti-blocking
 
 Added a resilient, pluggable HTTP layer so listings can be fetched reliably and
