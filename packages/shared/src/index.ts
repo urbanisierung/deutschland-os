@@ -20,6 +20,17 @@ export {
   SYSTEM_PROMPT,
 } from "./generator.js";
 export {
+  buildExpertSearchUrl,
+  ENERGIE_EFFIZIENZ_EXPERTEN_SEARCH,
+  type EnrichmentOptions,
+  type ExpertEntry,
+  enrichProviderFundingEligibility,
+  matchExpertEntry,
+  normalizeCompanyName,
+  type ProviderCandidate,
+  parseExpertEntries,
+} from "./provider-enrichment.js";
+export {
   type GenerateRequest,
   GenerateRequestSchema,
   type ListingSource,

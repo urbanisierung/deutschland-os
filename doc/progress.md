@@ -1,5 +1,33 @@
 # Progress
 
+## 2026-06-24 — Local Service Finder: Phase 2 (funding-eligibility enricher)
+
+Added the Energieeffizienz-Experten-Liste enricher — the step that turns a raw
+"exists here" candidate into a provider we know can keep a KfW/BAFA application
+eligible (the signal Google Maps lacks).
+
+- `provider-enrichment.ts`:
+  - `ProviderCandidate` — a `ProviderMatch` before funding enrichment (Places
+    API output).
+  - Pure, fixture-tested helpers: `normalizeCompanyName` (folds umlauts/ß, strips
+    German legal forms), `parseExpertEntries` (results HTML → entries),
+    `matchExpertEntry` (normalized either-direction containment + locality
+    disambiguation), `buildExpertSearchUrl`.
+  - `enrichProviderFundingEligibility` — fetches the EE-Experten search (reusing
+    the env-configured resilient fetcher; injectable for tests), and on a match
+    sets `fundingEligible: true` + adds the `energieeffizienz-experte` cert. A
+    failed/empty lookup yields `fundingEligible: false` rather than throwing, so
+    one bad lookup can't sink a batch. Output validated as `ProviderMatch`.
+  - The live DOM/endpoint can't be verified from here, so selectors + the search
+    URL are marked PROVISIONAL (validate against the live site before production),
+    consistent with the per-portal selector work tracked for the listing scraper.
+- `provider-enrichment.test.ts` — 12 tests (normalization, parsing, matching,
+  URL build, enrichment match/miss/error/dedupe). Full shared suite: 74/74 pass.
+- Exported the new symbols from `index.ts`.
+- Verification: `biome check .` clean, `turbo typecheck test` 6/6 pass.
+- Marked the enricher done in `doc/roadmap.md` (Phase 2 still has the Places
+  client and match-scoring pass outstanding).
+
 ## 2026-06-24 — Local Service Finder: Phase 1 (schema & core)
 
 Implemented the second use case's core in `@deutschland-os/shared`, mirroring the
