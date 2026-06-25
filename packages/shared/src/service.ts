@@ -63,6 +63,20 @@ export const ProviderMatchSchema = z.object({
 export type ProviderMatch = z.infer<typeof ProviderMatchSchema>;
 
 /**
+ * A candidate before funding enrichment — e.g. straight from the Places API: a
+ * {@link ProviderMatch} without the derived `fundingEligible` flag, with
+ * certifications optional. {@link enrichProviderFundingEligibility} turns it into
+ * a full {@link ProviderMatch}.
+ */
+export const ProviderCandidateSchema = ProviderMatchSchema.omit({
+  fundingEligible: true,
+  certifications: true,
+}).extend({
+  certifications: z.array(ProviderCertificationSchema).optional(),
+});
+export type ProviderCandidate = z.infer<typeof ProviderCandidateSchema>;
+
+/**
  * Structured result of a service-finder run: a ready-to-send Anfrage plus the
  * fit assessment. Mirrors {@link ApplicationResponse}. Per the Phase 0 decision,
  * v1 generates this for the user to send — it does not send anything itself.

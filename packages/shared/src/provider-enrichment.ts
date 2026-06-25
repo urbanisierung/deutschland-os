@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { createFetcherFromEnv, type FetchLike } from "./fetcher.js";
-import { type ProviderMatch, ProviderMatchSchema } from "./service.js";
+import { type ProviderCandidate, type ProviderMatch, ProviderMatchSchema } from "./service.js";
 
 /**
  * Funding-eligibility enrichment against the Energieeffizienz-Experten-Liste
@@ -15,11 +15,6 @@ import { type ProviderMatch, ProviderMatchSchema } from "./service.js";
  * relying on this in production (mirrors the per-portal selector work tracked for
  * the listing scraper).
  */
-
-/** A factual candidate from the data layer (Places API) before funding enrichment. */
-export type ProviderCandidate = Omit<ProviderMatch, "certifications" | "fundingEligible"> & {
-  certifications?: ProviderMatch["certifications"];
-};
 
 /** One entry parsed from the Energieeffizienz-Experten-Liste search results. */
 export type ExpertEntry = {

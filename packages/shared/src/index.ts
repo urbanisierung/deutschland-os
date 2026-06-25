@@ -27,7 +27,6 @@ export {
   enrichProviderFundingEligibility,
   matchExpertEntry,
   normalizeCompanyName,
-  type ProviderCandidate,
   parseExpertEntries,
 } from "./provider-enrichment.js";
 export {
@@ -41,9 +40,13 @@ export {
   GenerateRequestSchema,
   type ListingSource,
   ListingSourceSchema,
+  type ServiceFinderRequest,
+  ServiceFinderRequestSchema,
 } from "./request.js";
 export { parseGermanNumber, parseListingHtml, scrapeListing } from "./scraper.js";
 export {
+  type ProviderCandidate,
+  ProviderCandidateSchema,
   type ProviderCertification,
   ProviderCertificationSchema,
   type ProviderInquiry,
@@ -55,6 +58,11 @@ export {
   type ServiceTrade,
   ServiceTradeSchema,
 } from "./service.js";
+export {
+  type DraftedInquiry,
+  findAndDraft,
+  type ServiceFinderResult,
+} from "./service-finder.js";
 export {
   buildServiceHumanPrompt,
   createOpenAIServiceModel,

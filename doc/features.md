@@ -1,5 +1,25 @@
 # Features
 
+## Local service finder — 2026-06-24
+
+Match a concrete job (e.g. Wärmepumpe install) to the right local Betrieb. The
+second Deutschland OS use case; see
+[`docs/features/02_LOCAL_SERVICE_FINDER.md`](../docs/features/02_LOCAL_SERVICE_FINDER.md).
+
+- **Funding-eligibility enrichment** — checks each company against the
+  Energieeffizienz-Experten-Liste (the register that gates KfW/BAFA funding) —
+  the signal Google Maps lacks. (Live selectors/endpoint provisional.)
+- **Deterministic ranking** — scores candidates 0–100 by funding fit, distance,
+  and certifications, with German caveats; ranking is stable across runs.
+- **Drafted Anfrage** — generates a formal "Sie"-form inquiry for the top
+  contactable Betrieb (LangChain + OpenAI structured output).
+- **Web UI** — `/service` page: job form + manual provider entry → ranked list
+  with funding/score/distance badges and the drafted Anfrage.
+- **Claude skill** — `local-service-finder` runs the full pipeline (enrich →
+  rank → draft) as a portable CLI.
+- **Pending** — Google Places client to discover candidates automatically
+  (Phase 2); until then candidates are entered manually.
+
 ## Rental application generator — 2026-05-30
 
 The first Deutschland OS use case.

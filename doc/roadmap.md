@@ -54,9 +54,11 @@ for the full proposal.
       (`provider-scoring.ts`; deterministic pre-ranking + caveats)
 
 ### Phase 3 — Consumers
-- [ ] Astro + Preact flow: job form → ranked `ProviderMatch` list with funding
-      and caveat badges (mirror the real-estate UI)
-- [ ] Claude skill `local-service-finder` wrapping the same core as a CLI
+- [x] Astro + Preact flow: job form → ranked `ProviderMatch` list with funding
+      and caveat badges (mirror the real-estate UI) — `/service` page +
+      `/api/find-provider`; manual provider entry until the Places client lands
+- [x] Claude skill `local-service-finder` wrapping the same core as a CLI
+      (full pipeline: enrich → rank → draft)
 
 ### Phase 4 — Close the loop (optional v2)
 - [ ] Generate the Anfrage per match (reuse the Anschreiben generator)

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "generate": "node --experimental-strip-types skills/real-estate-application/scripts/generate.ts",
+    "find-provider": "node --experimental-strip-types skills/local-service-finder/scripts/find.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

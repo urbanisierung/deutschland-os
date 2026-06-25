@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ProviderMatchSchema, ServiceRequestSchema } from "./service.js";
 import { ListingSchema, UserProfileSchema } from "./types.js";
 
 /** Either a URL to scrape or a manually entered, already-structured listing. */
@@ -16,3 +17,14 @@ export const GenerateRequestSchema = z.object({
 });
 
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
+
+/**
+ * Wire contract for the service-finder endpoint: a job plus the (already
+ * enriched) provider candidates to rank and draft an inquiry for.
+ */
+export const ServiceFinderRequestSchema = z.object({
+  request: ServiceRequestSchema,
+  providers: z.array(ProviderMatchSchema).min(1),
+});
+
+export type ServiceFinderRequest = z.infer<typeof ServiceFinderRequestSchema>;

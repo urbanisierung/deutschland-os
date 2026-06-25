@@ -1,5 +1,38 @@
 # Progress
 
+## 2026-06-24 — Local Service Finder: Phase 3 (consumers)
+
+Wired the service-finder core into a web flow and a Claude skill, mirroring the
+real-estate consumers. Both are demoable now via manual provider entry; the
+Places client (Phase 2) will feed candidates automatically later.
+
+- Shared:
+  - `service.ts` — added `ProviderCandidateSchema`/`ProviderCandidate` (a
+    `ProviderMatch` before funding enrichment); `provider-enrichment.ts` now
+    imports the type from here instead of defining it.
+  - `request.ts` — `ServiceFinderRequestSchema` (`{ request, providers }`) wire
+    contract for the endpoint.
+  - `service-finder.ts` — `findAndDraft(request, providers, model)`: ranks, then
+    drafts an Anfrage for the single top contactable provider (bounds LLM cost),
+    returning the full ranked list either way. 2 tests.
+- Web (`apps/web`):
+  - `store/serviceStore.ts` — job form state + a pure `parseProviderLines()`
+    that turns the manual textarea (`Name; km; ja/nein; certs`) into enriched
+    `ProviderMatch[]`. 5 tests (incl. a regression: empty distance field must not
+    parse as 0).
+  - `pages/api/find-provider.ts` — validates, builds the OpenAI service model,
+    runs `findAndDraft`.
+  - `components/ServiceFinderForm.tsx` + `pages/service.astro` — job form,
+    ranked list with funding/score/distance badges and caveats, and the drafted
+    Anfrage. Reachable at `/service`.
+- Skill (`packages/plugins/claude`):
+  - `local-service-finder` (`SKILL.md` + `scripts/find.ts`) — full pipeline:
+    enrich each candidate (EE-Experten), rank, draft. `--request`/`--candidates`
+    (+ `--locality`, `--search-url`). Added the `find-provider` package script.
+- Verification: `biome check .` clean, `turbo typecheck test build` all green
+  (shared 106, web 7 tests).
+- Marked both Phase 3 items done in `doc/roadmap.md`.
+
 ## 2026-06-24 — Local Service Finder: Phase 2 (match-scoring pass)
 
 Added the deterministic pre-ranking that orders/filters enriched candidates

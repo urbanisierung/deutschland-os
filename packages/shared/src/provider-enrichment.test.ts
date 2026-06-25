@@ -5,9 +5,9 @@ import {
   enrichProviderFundingEligibility,
   matchExpertEntry,
   normalizeCompanyName,
-  type ProviderCandidate,
   parseExpertEntries,
 } from "./provider-enrichment.js";
+import type { ProviderCandidate } from "./service.js";
 
 const candidate: ProviderCandidate = {
   id: "places-abc123",
