@@ -1,5 +1,28 @@
 # Progress
 
+## 2026-06-24 — Local Service Finder: Phase 2 (match-scoring pass)
+
+Added the deterministic pre-ranking that orders/filters enriched candidates
+before any LLM call — the cheap, explainable layer beneath the generator.
+
+- `provider-scoring.ts`:
+  - `scoreProvider(request, provider)` → `{ score (0–100), shouldContact,
+    caveats, factors }`. Weighted blend of funding fit (0.45 — leads, since it's
+    the signal Maps lacks), distance decay (0.30, linear to 0 at 50 km), and
+    trust certifications (0.25, saturating at 3, excluding the funding cert).
+    KfW wanted but not funding-eligible → funding factor 0, critical caveat,
+    `shouldContact: false`. German caveats for funding risk, out-of-area
+    (>30 km), and no known certifications.
+  - `rankProviders(request, providers)` → best-first, ties broken by distance
+    then name. Pure (no clock/randomness) so order is stable across runs.
+- `provider-scoring.test.ts` — 8 tests (scoring components, funding-not-wanted
+  neutrality, distance decay, caveats, cert saturation, deterministic ranking).
+  Full shared suite: 102/102 pass.
+- Exported the new symbols from `index.ts`.
+- Verification: `biome check .` clean, `turbo typecheck test` 6/6 pass.
+- Marked the match-scoring item done in `doc/roadmap.md`. Phase 2 now has only
+  the Google Places client (needs an API key) outstanding.
+
 ## 2026-06-24 — Local Service Finder: Phase 2 (funding-eligibility enricher)
 
 Added the Energieeffizienz-Experten-Liste enricher — the step that turns a raw

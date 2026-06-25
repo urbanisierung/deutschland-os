@@ -50,7 +50,8 @@ for the full proposal.
 - [x] Energieeffizienz-Experten-Liste enricher (reuse `fetcher` + `scraper`)
       mapping each candidate to `fundingEligible` + certifications, with fixtures
       (`provider-enrichment.ts`; live selectors/endpoint provisional)
-- [ ] Match-scoring pass combining distance, certifications, and job fit
+- [x] Match-scoring pass combining distance, certifications, and job fit
+      (`provider-scoring.ts`; deterministic pre-ranking + caveats)
 
 ### Phase 3 — Consumers
 - [ ] Astro + Preact flow: job form → ranked `ProviderMatch` list with funding

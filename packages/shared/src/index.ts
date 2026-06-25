@@ -31,6 +31,12 @@ export {
   parseExpertEntries,
 } from "./provider-enrichment.js";
 export {
+  type ProviderScore,
+  type RankedProvider,
+  rankProviders,
+  scoreProvider,
+} from "./provider-scoring.js";
+export {
   type GenerateRequest,
   GenerateRequestSchema,
   type ListingSource,
