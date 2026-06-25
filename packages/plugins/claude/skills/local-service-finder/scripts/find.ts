@@ -10,10 +10,11 @@
  *   OPENAI_API_KEY=... node --experimental-strip-types find.ts \
  *     --request ./request.json \
  *     --candidates ./candidates.json \
- *     [--locality Berlin] [--search-url "https://…/?q={query}"]
+ *     [--locality Berlin] [--umkreis 10]
  *
  * `candidates.json` is an array matching ProviderCandidateSchema (e.g. from the
- * Places API). The script prints `{ ranked, topInquiry }` as JSON.
+ * Places API). Eligibility is checked around the request's PLZ within `--umkreis`
+ * km (default 10). The script prints `{ ranked, topInquiry }` as JSON.
  */
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
@@ -37,7 +38,7 @@ async function main(): Promise<void> {
       request: { type: "string" },
       candidates: { type: "string" },
       locality: { type: "string" },
-      "search-url": { type: "string" },
+      umkreis: { type: "string" },
     },
   });
 
@@ -57,14 +58,12 @@ async function main(): Promise<void> {
     ProviderCandidateSchema.parse(c),
   );
 
-  const searchUrl = values["search-url"];
+  const umkreis = values.umkreis ? Number(values.umkreis) : undefined;
   const providers = await Promise.all(
     candidates.map((candidate) =>
-      enrichProviderFundingEligibility(candidate, {
+      enrichProviderFundingEligibility(candidate, request.postalCode, {
         locality: values.locality,
-        searchUrl: searchUrl
-          ? (q) => searchUrl.replaceAll("{query}", encodeURIComponent(q))
-          : undefined,
+        umkreis,
       }),
     ),
   );

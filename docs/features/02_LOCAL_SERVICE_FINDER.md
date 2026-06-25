@@ -117,6 +117,17 @@ type ProviderInquiry = {
 
 The differentiation *is* the data, and that is where the work and risk sit.
 
+> **EE-Experten lookup (verified 2026-06):** the residential search is a
+> multipart **POST** to
+> `…/fuer-private-bauherren/finden-sie-experten-in-ihrer-naehe/suchergebnis`,
+> filtered by company/surname + PLZ + radius (fields
+> `tx_wwdenaexpertendb_qualification_suche[name|plz|umkreis]`). Results are
+> `.expertendb_single` blocks (company in `.adresse strong`, city in `.adresse`).
+> Implemented in `provider-enrichment.ts` via `createExpertSearch` +
+> `enrichProviderFundingEligibility(candidate, plz, …)`. Name matching is
+> normalized-containment (tolerant of legal-form/suffix differences); only the
+> first results page is parsed.
+
 **Clean sources (consult these first — they exist to be searched):**
 
 - Energieeffizienz-Experten-Liste · Handwerkskammer directories ·

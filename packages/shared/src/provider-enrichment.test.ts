@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { FetchLike, HttpResponse } from "./fetcher.js";
 import {
-  buildExpertSearchUrl,
+  type ExpertSearch,
   enrichProviderFundingEligibility,
   matchExpertEntry,
   normalizeCompanyName,
@@ -11,22 +10,30 @@ import type { ProviderCandidate } from "./service.js";
 
 const candidate: ProviderCandidate = {
   id: "places-abc123",
-  name: "Wärme & Technik Berlin GmbH",
+  name: "RWP Beratende Ingenieure f Bauphysik GmbH & Co. KG",
   location: { lat: 52.53, lng: 13.39 },
   distanceKm: 4.2,
   url: null,
 };
 
-const resultsHtml = `<ul>
-  <li class="result"><h3 class="name">Wärme &amp; Technik Berlin</h3><span class="city">Berlin</span></li>
-  <li class="result"><h3 class="name">Sonnen Heizbau GmbH</h3><span class="city">Potsdam</span></li>
-</ul>`;
+// Structure mirrors the live residential results page (.expertendb_single blocks).
+const resultsHtml = `
+<div class="expert-search-result">
+  <div class="expertendb_single">
+    <div class="header"><div class="header-text">Dipl.-Ing. (FH)\n Jens Wesner</div></div>
+    <div class="c-container"><div class="c-column">
+      <div class="adresse"><strong>RWP Beratende Ingenieure f Bauphysik GmbH &amp; Co. KG</strong><br/> Musterstr. 1,<br/> 10115 Berlin </div>
+    </div></div>
+  </div>
+  <div class="expertendb_single">
+    <div class="header"><div class="header-text">Julia Wadehn</div></div>
+    <div class="c-container"><div class="c-column">
+      <div class="adresse"><strong>NOVO Building GmbH</strong><br/> Beispielweg 2,<br/> 14467 Potsdam </div>
+    </div></div>
+  </div>
+</div>`;
 
-const ok = (body: string): HttpResponse => ({
-  ok: true,
-  status: 200,
-  text: async () => body,
-});
+const search = (html: string): ExpertSearch => vi.fn().mockResolvedValue(html);
 
 describe("normalizeCompanyName", () => {
   it("folds umlauts and strips legal forms + punctuation", () => {
@@ -41,12 +48,20 @@ describe("normalizeCompanyName", () => {
 });
 
 describe("parseExpertEntries", () => {
-  it("extracts name and locality per result", () => {
+  it("extracts company name and city (PLZ stripped) per result", () => {
     const entries = parseExpertEntries(resultsHtml);
     expect(entries).toEqual([
-      { name: "Wärme & Technik Berlin", locality: "Berlin" },
-      { name: "Sonnen Heizbau GmbH", locality: "Potsdam" },
+      { name: "RWP Beratende Ingenieure f Bauphysik GmbH & Co. KG", locality: "Berlin" },
+      { name: "NOVO Building GmbH", locality: "Potsdam" },
     ]);
+  });
+
+  it("falls back to the person name when no company is listed", () => {
+    const html = `<div class="expertendb_single">
+      <div class="header"><div class="header-text">Hanna Full</div></div>
+      <div class="adresse"> Straße 3,<br/> 10115 Berlin </div>
+    </div>`;
+    expect(parseExpertEntries(html)).toEqual([{ name: "Hanna Full", locality: "Berlin" }]);
   });
 
   it("returns an empty array when there are no results", () => {
@@ -57,59 +72,57 @@ describe("parseExpertEntries", () => {
 describe("matchExpertEntry", () => {
   const entries = parseExpertEntries(resultsHtml);
 
-  it("matches across legal-form and locality differences", () => {
-    const match = matchExpertEntry("Wärme & Technik Berlin GmbH", entries, "Berlin");
-    expect(match?.name).toBe("Wärme & Technik Berlin");
+  it("matches across legal-form differences (suffix dropped) and city", () => {
+    const match = matchExpertEntry("NOVO Building", entries, "Potsdam");
+    expect(match?.name).toBe("NOVO Building GmbH");
   });
 
   it("returns null when the company is not listed", () => {
     expect(matchExpertEntry("Kälteprofi Hamburg GmbH", entries)).toBeNull();
   });
 
-  it("rejects a name match in a different locality", () => {
-    expect(matchExpertEntry("Sonnen Heizbau GmbH", entries, "München")).toBeNull();
-  });
-});
-
-describe("buildExpertSearchUrl", () => {
-  it("url-encodes the query into the template", () => {
-    const url = buildExpertSearchUrl("Wärme & Technik", "https://example.test/?q={query}");
-    expect(url).toBe("https://example.test/?q=W%C3%A4rme%20%26%20Technik");
+  it("rejects a name match in a different city", () => {
+    expect(matchExpertEntry("NOVO Building GmbH", entries, "München")).toBeNull();
   });
 });
 
 describe("enrichProviderFundingEligibility", () => {
   it("sets fundingEligible and adds the certification on a match", async () => {
-    const fetchImpl: FetchLike = vi.fn().mockResolvedValue(ok(resultsHtml));
-    const result = await enrichProviderFundingEligibility(candidate, {
-      fetchImpl,
+    const result = await enrichProviderFundingEligibility(candidate, "10115", {
+      search: search(resultsHtml),
       locality: "Berlin",
     });
     expect(result.fundingEligible).toBe(true);
     expect(result.certifications).toContain("energieeffizienz-experte");
   });
 
+  it("passes the candidate name and PLZ to the search", async () => {
+    const spy = search(resultsHtml);
+    await enrichProviderFundingEligibility(candidate, "10115", { search: spy, umkreis: 20 });
+    expect(spy).toHaveBeenCalledWith({ name: candidate.name, plz: "10115", umkreis: 20 });
+  });
+
   it("leaves the candidate not-eligible when unlisted", async () => {
-    const fetchImpl: FetchLike = vi.fn().mockResolvedValue(ok("<div>Keine Treffer</div>"));
-    const result = await enrichProviderFundingEligibility(candidate, { fetchImpl });
+    const result = await enrichProviderFundingEligibility(candidate, "10115", {
+      search: search("<div>Keine Treffer</div>"),
+    });
     expect(result.fundingEligible).toBe(false);
     expect(result.certifications).toEqual([]);
   });
 
-  it("treats a failed lookup as not-eligible instead of throwing", async () => {
-    const fetchImpl: FetchLike = vi.fn().mockRejectedValue(new Error("network down"));
-    const result = await enrichProviderFundingEligibility(candidate, { fetchImpl });
+  it("treats a failed search as not-eligible instead of throwing", async () => {
+    const failing: ExpertSearch = vi.fn().mockRejectedValue(new Error("network down"));
+    const result = await enrichProviderFundingEligibility(candidate, "10115", { search: failing });
     expect(result.fundingEligible).toBe(false);
   });
 
   it("does not duplicate an already-present certification", async () => {
-    const fetchImpl: FetchLike = vi.fn().mockResolvedValue(ok(resultsHtml));
     const seeded: ProviderCandidate = {
       ...candidate,
       certifications: ["energieeffizienz-experte", "meisterbetrieb"],
     };
-    const result = await enrichProviderFundingEligibility(seeded, {
-      fetchImpl,
+    const result = await enrichProviderFundingEligibility(seeded, "10115", {
+      search: search(resultsHtml),
       locality: "Berlin",
     });
     expect(result.certifications).toEqual(["energieeffizienz-experte", "meisterbetrieb"]);

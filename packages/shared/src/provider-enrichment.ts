@@ -1,5 +1,4 @@
 import * as cheerio from "cheerio";
-import { createFetcherFromEnv, type FetchLike } from "./fetcher.js";
 import { type ProviderCandidate, type ProviderMatch, ProviderMatchSchema } from "./service.js";
 
 /**
@@ -9,28 +8,35 @@ import { type ProviderCandidate, type ProviderMatch, ProviderMatchSchema } from 
  * the service finder's added value: it turns a raw "exists here" candidate from
  * the Places API into a provider we know can keep a funding application valid.
  *
- * The HTML parsing and matching are pure and fixture-tested. The live DOM and
- * search endpoint cannot be verified from here, so the selectors and search URL
- * below are PROVISIONAL — validate and adjust them against the live site before
- * relying on this in production (mirrors the per-portal selector work tracked for
- * the listing scraper).
+ * Endpoint and result markup verified against the live site (2026-06): the
+ * residential ("Wohngebäude") search is a multipart POST to a TYPO3 results page,
+ * filtered by company/surname + PLZ + radius. Each result is a `.expertendb_single`
+ * block; the company sits in `.adresse strong`, the person in `.header-text`, and
+ * the locality is the `PLZ Stadt` line of `.adresse`. Only the first results page
+ * is parsed (15 entries); the `name` filter normally surfaces a match there.
  */
+
+/** Live residential search results endpoint (multipart POST). */
+export const ENERGIE_EFFIZIENZ_EXPERTEN_RESULTS =
+  "https://www.energie-effizienz-experten.de/fuer-private-bauherren/finden-sie-experten-in-ihrer-naehe/suchergebnis";
+
+/** TYPO3 form field for the company / surname filter. */
+const FIELD_NAME = "tx_wwdenaexpertendb_qualification_suche[name]";
+/** TYPO3 form field for the postal code the search centers on. */
+const FIELD_PLZ = "tx_wwdenaexpertendb_qualification_suche[plz]";
+/** TYPO3 form field for the search radius in km. */
+const FIELD_UMKREIS = "tx_wwdenaexpertendb_qualification_suche[umkreis]";
 
 /** One entry parsed from the Energieeffizienz-Experten-Liste search results. */
 export type ExpertEntry = {
+  /** Company name when present, otherwise the listed person's name. */
   name: string;
-  /** City / locality when present, used to disambiguate same-named Betriebe. */
+  /** City (PLZ stripped) when present, used to disambiguate same-named Betriebe. */
   locality: string | null;
 };
 
-/** PROVISIONAL search endpoint — confirm the real query parameter against the live site. */
-export const ENERGIE_EFFIZIENZ_EXPERTEN_SEARCH =
-  "https://www.energie-effizienz-experten.de/expertensuche/?q={query}";
-
-/** PROVISIONAL result selectors — confirm against the live site's markup. */
-const EXPERT_ENTRY_SELECTOR = ".search-result, .expert-entry, li.result";
-const EXPERT_NAME_SELECTOR = ".name, .company, h3, h2";
-const EXPERT_LOCALITY_SELECTOR = ".locality, .city, .ort";
+const EXPERT_ENTRY_SELECTOR = ".expertendb_single";
+const collapse = (text: string): string => text.replace(/\s+/g, " ").trim();
 
 /** German legal-form tokens stripped before comparing company names. */
 const LEGAL_FORM_TOKENS = [
@@ -65,9 +71,15 @@ export function normalizeCompanyName(name: string): string {
   return s.replace(/[^a-z0-9]/g, "");
 }
 
+/** Extracts the city from an address line, dropping the leading PLZ ("10115 Berlin" → "Berlin"). */
+function localityFromAddress(adresse: string): string | null {
+  const match = collapse(adresse).match(/\d{5}\s+([A-Za-zÄÖÜäöüß.\-/ ]+)$/);
+  return match?.[1] ? match[1].trim() : null;
+}
+
 /**
  * Parses Energieeffizienz-Experten-Liste search-results HTML into entries.
- * Pure; selectors are provisional (see module note).
+ * Pure; selectors verified against the live residential results page.
  */
 export function parseExpertEntries(html: string): ExpertEntry[] {
   const $ = cheerio.load(html);
@@ -75,10 +87,11 @@ export function parseExpertEntries(html: string): ExpertEntry[] {
 
   $(EXPERT_ENTRY_SELECTOR).each((_, el) => {
     const node = $(el);
-    const name = node.find(EXPERT_NAME_SELECTOR).first().text().trim();
+    const company = collapse(node.find(".adresse strong").first().text());
+    const person = collapse(node.find(".header-text").first().text());
+    const name = company || person;
     if (!name) return;
-    const locality = node.find(EXPERT_LOCALITY_SELECTOR).first().text().trim();
-    entries.push({ name, locality: locality || null });
+    entries.push({ name, locality: localityFromAddress(node.find(".adresse").first().text()) });
   });
 
   return entries;
@@ -116,57 +129,80 @@ export function matchExpertEntry(
   return null;
 }
 
-/** Builds the Energieeffizienz-Experten search URL for a query. */
-export function buildExpertSearchUrl(
-  query: string,
-  base: string = ENERGIE_EFFIZIENZ_EXPERTEN_SEARCH,
-): string {
-  return base.replaceAll("{query}", encodeURIComponent(query));
+/** A search against the Energieeffizienz-Experten-Liste, filtered by name + location. */
+export type ExpertQuery = { name: string; plz: string; umkreis?: number };
+/** Runs a search and returns the raw results HTML. Injectable for tests. */
+export type ExpertSearch = (query: ExpertQuery) => Promise<string>;
+
+const SEARCH_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
+/**
+ * Builds the default live search: a multipart POST to the residential results
+ * page, filtered by company/surname, PLZ, and radius. Pass a custom `fetchImpl`
+ * to route through a proxy; tests inject a fake {@link ExpertSearch} instead.
+ */
+export function createExpertSearch(fetchImpl: typeof fetch = fetch): ExpertSearch {
+  return async ({ name, plz, umkreis = 10 }) => {
+    const body = new FormData();
+    body.set(FIELD_NAME, name);
+    body.set(FIELD_PLZ, plz);
+    body.set(FIELD_UMKREIS, String(umkreis));
+
+    const response = await fetchImpl(ENERGIE_EFFIZIENZ_EXPERTEN_RESULTS, {
+      method: "POST",
+      body,
+      redirect: "follow",
+      headers: { "User-Agent": SEARCH_USER_AGENT, "Accept-Language": "de-DE,de;q=0.9" },
+    });
+    if (!response.ok) {
+      throw new Error(`EE-Experten search failed (${response.status}).`);
+    }
+    return response.text();
+  };
 }
 
 export type EnrichmentOptions = {
-  /** Injected fetcher; defaults to the env-configured resilient fetcher. */
-  fetchImpl?: FetchLike;
-  /** Override the search URL builder (e.g. to point at a confirmed endpoint). */
-  searchUrl?: (query: string) => string;
-  /** Locality (city) to disambiguate same-named Betriebe. */
+  /** Injected search; defaults to the live POST search. */
+  search?: ExpertSearch;
+  /** Search radius in km (default 10). */
+  umkreis?: number;
+  /** City to disambiguate same-named Betriebe. */
   locality?: string;
 };
 
-/** Lazily created so environment configuration is read at call time, not import time. */
-let defaultFetcher: FetchLike | undefined;
+/** Lazily created so the default search is only constructed when first needed. */
+let defaultSearch: ExpertSearch | undefined;
 
 /**
  * Enriches a candidate with KfW/BAFA funding eligibility by checking the
- * Energieeffizienz-Experten-Liste. On a match, sets `fundingEligible: true` and
- * adds the `energieeffizienz-experte` certification. A failed lookup (network
- * error, non-OK response, or no match) yields `fundingEligible: false` — absence
- * of evidence is treated as not-eligible, never as a thrown error, so one bad
- * lookup can't sink a whole batch. The result is validated as a {@link ProviderMatch}.
+ * Energieeffizienz-Experten-Liste around the given postal code. On a match, sets
+ * `fundingEligible: true` and adds the `energieeffizienz-experte` certification. A
+ * failed lookup (network/search error or no match) yields `fundingEligible: false`
+ * — absence of evidence is treated as not-eligible, never as a thrown error, so
+ * one bad lookup can't sink a whole batch. Validated as a {@link ProviderMatch}.
  */
 export async function enrichProviderFundingEligibility(
   candidate: ProviderCandidate,
+  plz: string,
   options: EnrichmentOptions = {},
 ): Promise<ProviderMatch> {
-  const buildUrl = options.searchUrl ?? ((q: string) => buildExpertSearchUrl(q));
-  if (!options.fetchImpl && !defaultFetcher) defaultFetcher = createFetcherFromEnv();
-  const doFetch = options.fetchImpl ?? (defaultFetcher as FetchLike);
+  if (!options.search && !defaultSearch) defaultSearch = createExpertSearch();
+  const search = options.search ?? (defaultSearch as ExpertSearch);
 
   const existing = candidate.certifications ?? [];
   let fundingEligible = false;
   let certifications = existing;
 
   try {
-    const response = await doFetch(buildUrl(candidate.name));
-    if (response.ok) {
-      const entries = parseExpertEntries(await response.text());
-      const match = matchExpertEntry(candidate.name, entries, options.locality);
-      if (match) {
-        fundingEligible = true;
-        certifications = existing.includes("energieeffizienz-experte")
-          ? existing
-          : [...existing, "energieeffizienz-experte"];
-      }
+    const html = await search({ name: candidate.name, plz, umkreis: options.umkreis });
+    const entries = parseExpertEntries(html);
+    const match = matchExpertEntry(candidate.name, entries, options.locality);
+    if (match) {
+      fundingEligible = true;
+      certifications = existing.includes("energieeffizienz-experte")
+        ? existing
+        : [...existing, "energieeffizienz-experte"];
     }
   } catch {
     // Lookup failed; leave the candidate not-eligible rather than failing the batch.

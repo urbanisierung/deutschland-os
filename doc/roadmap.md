@@ -47,9 +47,9 @@ for the full proposal.
 
 ### Phase 2 — Data layer
 - [ ] Google Places API client for "who exists + where" (env-configured key)
-- [x] Energieeffizienz-Experten-Liste enricher (reuse `fetcher` + `scraper`)
-      mapping each candidate to `fundingEligible` + certifications, with fixtures
-      (`provider-enrichment.ts`; live selectors/endpoint provisional)
+- [x] Energieeffizienz-Experten-Liste enricher mapping each candidate to
+      `fundingEligible` + certifications, with fixtures (`provider-enrichment.ts`;
+      live POST endpoint + result selectors verified against the site 2026-06)
 - [x] Match-scoring pass combining distance, certifications, and job fit
       (`provider-scoring.ts`; deterministic pre-ranking + caveats)
 

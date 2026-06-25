@@ -43,12 +43,13 @@ node --experimental-strip-types \
   skills/local-service-finder/scripts/find.ts \
   --request ./request.json \
   --candidates ./candidates.json \
-  --locality Berlin
+  --locality Berlin \
+  --umkreis 10
 ```
 
-Pass `--search-url "https://…/?q={query}"` to point the eligibility lookup at a
-confirmed Energieeffizienz-Experten-Liste endpoint (the built-in one is
-provisional). The script prints `{ ranked, topInquiry }` as JSON.
+Eligibility is checked against the Energieeffizienz-Experten-Liste around the
+request's PLZ within `--umkreis` km (default 10). The script prints
+`{ ranked, topInquiry }` as JSON.
 
 ## Request example (`request.json`)
 

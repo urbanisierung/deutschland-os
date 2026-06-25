@@ -8,7 +8,7 @@ second Deutschland OS use case; see
 
 - **Funding-eligibility enrichment** — checks each company against the
   Energieeffizienz-Experten-Liste (the register that gates KfW/BAFA funding) —
-  the signal Google Maps lacks. (Live selectors/endpoint provisional.)
+  the signal Google Maps lacks. (Live POST endpoint + selectors verified.)
 - **Deterministic ranking** — scores candidates 0–100 by funding fit, distance,
   and certifications, with German caveats; ranking is stable across runs.
 - **Drafted Anfrage** — generates a formal "Sie"-form inquiry for the top

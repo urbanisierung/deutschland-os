@@ -1,5 +1,38 @@
 # Progress
 
+## 2026-06-25 — Local Service Finder: verified live EE-Experten search
+
+Verified the Energieeffizienz-Experten-Liste against the live site and replaced
+the provisional enricher internals with the real contract. The provisional model
+was wrong on every axis.
+
+- Findings (energie-effizienz-experten.de, residential "Wohngebäude" search):
+  - Endpoint is **POST** (multipart/form-data) to
+    `/fuer-private-bauherren/finden-sie-experten-in-ihrer-naehe/suchergebnis`
+    (the old provisional `/expertensuche/?q=` 404s).
+  - Filter fields: `tx_wwdenaexpertendb_qualification_suche[name|plz|umkreis]`
+    (company/surname, postal code, radius km). Search centers on a PLZ, not a
+    free-text query. Works without the TYPO3 login form's CSRF/trusted tokens.
+  - Results: 15 per page; each is a `.expertendb_single` block — company in
+    `.adresse strong`, person in `.header-text`, locality the `PLZ Stadt` line of
+    `.adresse`. (None of the provisional selectors matched.)
+- `provider-enrichment.ts` rewritten to the verified contract:
+  - `ENERGIE_EFFIZIENZ_EXPERTEN_RESULTS` + the real field-name constants.
+  - `createExpertSearch(fetchImpl?)` builds the live multipart POST (injectable);
+    `ExpertQuery`/`ExpertSearch` types replace the GET `buildExpertSearchUrl`.
+  - `parseExpertEntries` uses the real selectors; `localityFromAddress` strips the
+    PLZ to a city. `enrichProviderFundingEligibility(candidate, plz, options)` now
+    takes the search-center PLZ and an `umkreis`.
+  - Tests use a fixture mirroring the live markup (13 enrichment tests).
+- Skill `find.ts` updated: `--umkreis` replaces `--search-url`; eligibility is
+  checked around the request's PLZ.
+- Known limitation (documented): name matching is normalized-containment, so it
+  tolerates legal-form/suffix differences but not interior token insertions
+  between the Places name and the register name (e.g. an extra "f Bauphysik").
+  Only the first results page is parsed; the name filter usually surfaces a match.
+- Verification: `biome check .` clean, `turbo typecheck test build` green
+  (shared 108).
+
 ## 2026-06-24 — Local Service Finder: Phase 3 (consumers)
 
 Wired the service-finder core into a web flow and a Claude skill, mirroring the
